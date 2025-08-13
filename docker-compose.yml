@@ -1,0 +1,107 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER} # задаются в .env
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: ${BACKEND_PORT:-3030}
+      # Параметры подключения к БД (TypeORM читает по твоей конфигурации)
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      # Для puppeteer — безопасный запуск без песочницы
+      PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
+    expose:
+      - "${BACKEND_PORT:-3030}"
+    networks:
+      - app_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: ${FRONTEND_PORT:-3000}
+      # Публичный адрес API. Варианты:
+      # - Если используешь поддомен: https://api.moysait.com
+      # - Если проксируешь /api на тот же домен: /api
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+    expose:
+      - "${FRONTEND_PORT:-3000}"
+    networks:
+      - app_net
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Конфиги nginx
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # ACME-challenge webroot
+      - nginx-certbot-www:/var/www/certbot
+      # Сертификаты Let's Encrypt
+      - certbot-etc:/etc/letsencrypt
+    networks:
+      - app_net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    # Никаких портов — работает через общий webroot с nginx
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - nginx-certbot-www:/var/www/certbot
+    # Фоновое автообновление (первичный выпуск сертификатов см. ниже)
+    command: sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet && echo "Certs renewed"; sleep 12h; done'
+    networks:
+      - app_net
+
+volumes:
+  pg_data:
+  certbot-etc:
+  nginx-certbot-www:
+
+networks:
+  app_net:
+    driver: bridge
