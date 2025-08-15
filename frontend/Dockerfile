@@ -4,8 +4,8 @@ WORKDIR /app
 # Для некоторых нативных модулей нужен совместимый libc
 RUN apk add --no-cache libc6-compat
 COPY package*.json ./
-# Быстро и детерминированно
-RUN npm ci
+# ИСПРАВЛЕНО: Используем npm install, так как он не требует package-lock.json
+RUN npm install
 
 # ---------- 2) builder: билдим Next ----------
 FROM node:20-alpine AS builder
@@ -21,7 +21,8 @@ RUN npm run build
 FROM node:20-alpine AS prod-deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+# ИСПРАВЛЕНО: Используем npm install, так как он не требует package-lock.json
+RUN npm install --omit=dev
 
 # ---------- 4) runner: минимальный рантайм ----------
 FROM node:20-alpine AS runner
