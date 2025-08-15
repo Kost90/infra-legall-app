@@ -1,19 +1,35 @@
 server {
-  listen 80;
-  server_name moysait.com www.moysait.com api.moysait.com;
+    listen 80;
+    server_name udocument.com www.udocument.com api.udocument.com;
 
-  # ACME challenge для certbot (webroot)
-  location /.well-known/acme-challenge/ {
-    root /var/www/certbot;
-  }
+    # ACME challenge для certbot (webroot)
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
 
-  # Пока без редиректа на https — его включим после выпуска сертификатов
-  location / {
-    # Можно сразу проксировать фронтенд, чтобы видеть сайт на http
-    proxy_pass http://frontend:3000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-  }
+    # Проксирование API на backend
+    location /api/ {
+        proxy_pass http://backend:3030/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Проксирование фронтенда
+    location / {
+        proxy_pass http://frontend:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
 }
