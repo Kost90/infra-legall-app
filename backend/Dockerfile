@@ -4,7 +4,8 @@ WORKDIR /app
 # Чтобы не качать Chromium в этапах сборки:
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 COPY package*.json ./
-RUN npm ci
+# ИСПРАВЛЕНО: Используем npm install для большей надежности
+RUN npm install
 
 # ---------- 2) builder: собираем Nest в dist ----------
 FROM node:20-bookworm-slim AS builder
@@ -19,7 +20,8 @@ RUN npm run build
 FROM node:20-bookworm-slim AS prune
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+# ИСПРАВЛЕНО: Используем npm install для большей надежности
+RUN npm install --omit=dev
 
 # ---------- 4) runner: puppeteer runtime с Chromium ----------
 FROM ghcr.io/puppeteer/puppeteer:latest AS runner

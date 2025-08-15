@@ -1,9 +1,8 @@
-version: "3.8"
-
 services:
   backend:
     build:
-      context: ./backend
+      # ИСПРАВЛЕНО: Указываем точный путь к папке с кодом бэкенда
+      context: ./backend/legal-app
       dockerfile: Dockerfile
     container_name: backend
     restart: unless-stopped
@@ -14,11 +13,9 @@ services:
       DB_HOST: udocument-do-user-24626001-0.d.db.ondigitalocean.com
       DB_PORT: 25060
       DB_USER: doadmin
-      DB_PASSWORD: ${DB_PASSWORD} # укажи в .env
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: defaultdb
       DB_SSL: "true"
-      # или можно одной строкой, если твой backend это поддерживает:
-      # DATABASE_URL: postgresql://doadmin:${DB_PASSWORD}@udocument-do-user-24626001-0.d.db.ondigitalocean.com:25060/defaultdb?sslmode=require
       PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
     expose:
       - "${BACKEND_PORT:-3030}"
@@ -27,7 +24,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      # ИСПРАВЛЕНО: Указываем точный путь к папке с кодом фронтенда
+      context: ./frontend/legalapp-front
       dockerfile: Dockerfile
     container_name: frontend
     restart: unless-stopped
