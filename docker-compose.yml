@@ -16,7 +16,6 @@ services:
       DB_NAME: udocument
       DB_SSL: "true"
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-      PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium"
     expose:
       - "${BACKEND_PORT:-3030}"
     shm_size: "1gb"
