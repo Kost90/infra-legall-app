@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name udocument.com www.udocument.com api.udocument.com;
+    server_name 134.209.224.92;
 
     # ACME challenge для certbot (webroot)
     location /.well-known/acme-challenge/ {

@@ -1,7 +1,6 @@
 services:
   backend:
     build:
-      # ИСПРАВЛЕНО: Указываем точный путь к папке с кодом бэкенда
       context: ./backend/legal-app
       dockerfile: Dockerfile
     container_name: backend
@@ -16,17 +15,17 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: defaultdb
       DB_SSL: "true"
-      PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium"
     expose:
       - "${BACKEND_PORT:-3030}"
+    shm_size: "1gb"
     networks:
       - app_net
 
   frontend:
     build:
-      # ИСПРАВЛЕНО: Указываем точный путь к папке с кодом фронтенда
       context: ./frontend/legalapp-front
-      dockerfile: Dockerfile
     container_name: frontend
     restart: unless-stopped
     env_file: .env
