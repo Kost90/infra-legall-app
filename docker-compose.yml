@@ -13,7 +13,7 @@ services:
       DB_PORT: 25060
       DB_USER: doadmin
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: defaultdb
+      DB_NAME: udocument
       DB_SSL: "true"
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
       PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium"
